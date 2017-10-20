@@ -2,7 +2,7 @@
 
   <PropertyGroup>
   
-    <TargetFrameworks>net45</TargetFrameworks>
+    <TargetFrameworks>net35</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblyName>Facepunch.Steamworks</AssemblyName>
 	
