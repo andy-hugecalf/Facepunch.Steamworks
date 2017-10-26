@@ -89,10 +89,10 @@ namespace Facepunch.Steamworks
 			SteamNative.HTML_URLChanged_t.RegisterCallback(client, HTML_URLChanged_t_CB);
 			SteamNative.HTML_VerticalScroll_t.RegisterCallback(client, HTML_VerticalScroll_t_CB);
 		}
-		public void CreateBrowser() {
+		public void CreateBrowser(string userAgent, string css) {
 			if(mReady) return;
 
-			htmlSurface.CreateBrowser(null, null, HTML_BrowserReady_t_CB);
+			htmlSurface.CreateBrowser(userAgent, css, HTML_BrowserReady_t_CB);
 		}
 		public void SetHorizontalScroll(uint absScrollPos) {
 			if(!mReady) return;
