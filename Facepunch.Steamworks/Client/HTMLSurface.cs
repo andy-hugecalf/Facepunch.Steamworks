@@ -195,6 +195,12 @@ namespace Facepunch.Steamworks
 			htmlSurface.SetKeyFocus(mBrowser, hasFocus);
 		}
 
+		public void SetCookie(string hostname, string key, string value, string path, uint expires, bool secure, bool httpOnly) {
+			if(!mReady) return;
+
+			htmlSurface.SetCookie(hostname, key, value, path, expires, secure, httpOnly);
+		}
+
 
 		void HTML_BrowserReady_t_CB(SteamNative.HTML_BrowserReady_t data, bool failed) {
 			mBrowser = data.UnBrowserHandle;
