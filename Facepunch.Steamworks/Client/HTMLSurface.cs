@@ -83,7 +83,7 @@ namespace Facepunch.Steamworks
 			SteamNative.HTML_SearchResults_t.RegisterCallback(client, HTML_SearchResults_t_CB);
 			SteamNative.HTML_SetCursor_t.RegisterCallback(client, HTML_SetCursor_t_CB);
 			SteamNative.HTML_ShowToolTip_t.RegisterCallback(client, HTML_ShowToolTip_t_CB);
-			//SteamNative.HTML_StartRequest_t.RegisterCallback(client, HTML_StartRequest_t_CB);
+			SteamNative.HTML_StartRequest_t.RegisterCallback(client, HTML_StartRequest_t_CB);
 			SteamNative.HTML_StatusText_t.RegisterCallback(client, HTML_StatusText_t_CB);
 			SteamNative.HTML_UpdateToolTip_t.RegisterCallback(client, HTML_UpdateToolTip_t_CB);
 			SteamNative.HTML_URLChanged_t.RegisterCallback(client, HTML_URLChanged_t_CB);
@@ -167,20 +167,20 @@ namespace Facepunch.Steamworks
 
 			htmlSurface.MouseMove(mBrowser, x, y);
 		}
-		public void KeyDown(uint keyCode) {
+		public void KeyDown(uint keyCode, uint modifiers) {
 			if(!mReady) return;
 
-			htmlSurface.KeyDown(mBrowser, keyCode, SteamNative.HTMLKeyModifiers.None);
+			htmlSurface.KeyDown(mBrowser, keyCode, (SteamNative.HTMLKeyModifiers) modifiers);
 		}
-		public void KeyUp(uint keyCode) {
+		public void KeyUp(uint keyCode, uint modifiers) {
 			if(!mReady) return;
 
-			htmlSurface.KeyUp(mBrowser, keyCode, SteamNative.HTMLKeyModifiers.None);
+			htmlSurface.KeyUp(mBrowser, keyCode, (SteamNative.HTMLKeyModifiers) modifiers);
 		}
-		public void KeyChar(uint keyChar) {
+		public void KeyChar(uint keyChar, uint modifiers) {
 			if(!mReady) return;
 
-			htmlSurface.KeyChar(mBrowser, keyChar, SteamNative.HTMLKeyModifiers.None);
+			htmlSurface.KeyChar(mBrowser, keyChar, (SteamNative.HTMLKeyModifiers) modifiers);
 		}
 
 		public void JSDialogResponse(bool result) {
