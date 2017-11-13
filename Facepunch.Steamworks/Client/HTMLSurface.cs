@@ -189,6 +189,12 @@ namespace Facepunch.Steamworks
 			htmlSurface.JSDialogResponse(mBrowser, result);
 		}
 
+		public void SetKeyFocus(bool hasFocus) {
+			if(!mReady) return;
+
+			htmlSurface.SetKeyFocus(mBrowser, hasFocus);
+		}
+
 
 		void HTML_BrowserReady_t_CB(SteamNative.HTML_BrowserReady_t data, bool failed) {
 			mBrowser = data.UnBrowserHandle;
