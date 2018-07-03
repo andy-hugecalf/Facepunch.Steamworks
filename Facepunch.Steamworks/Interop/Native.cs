@@ -22,6 +22,7 @@ namespace Facepunch.Steamworks.Interop
         internal SteamNative.SteamUtils utils;
         internal SteamNative.SteamScreenshots screenshots;
         internal SteamNative.SteamHTTP http;
+		internal SteamNative.SteamHTMLSurface htmlSurface;
         internal SteamNative.SteamUGC ugc;
         internal SteamNative.SteamGameServer gameServer;
         internal SteamNative.SteamGameServerStats gameServerStats;
@@ -62,11 +63,11 @@ namespace Facepunch.Steamworks.Interop
 
             // Ensure that the user has logged into Steam. This will always return true if the game is launched
             // from Steam, but if Steam is at the login prompt when you run your game it will return false.
-            if ( !user.BLoggedOn() )
-            {
-                Console.Error.WriteLine( "InitClient: Not Logged On" );
-                return false;
-            }
+            //if ( !user.BLoggedOn() )
+            //{
+            //    Console.Error.WriteLine( "InitClient: Not Logged On" );
+            //    return false;
+            //}
 
             return true;
         }
@@ -117,6 +118,7 @@ namespace Facepunch.Steamworks.Interop
             networking = client.GetISteamNetworking( huser, hpipe, SteamNative.Defines.STEAMNETWORKING_INTERFACE_VERSION );
             gameServerStats = client.GetISteamGameServerStats( huser, hpipe, SteamNative.Defines.STEAMGAMESERVERSTATS_INTERFACE_VERSION );
             http = client.GetISteamHTTP( huser, hpipe, SteamNative.Defines.STEAMHTTP_INTERFACE_VERSION );
+			htmlSurface = client.GetISteamHTMLSurface(hUser, hpipe, SteamNative.Defines.STEAMHTMLSURFACE_INTERFACE_VERSION);
             inventory = client.GetISteamInventory( huser, hpipe, SteamNative.Defines.STEAMINVENTORY_INTERFACE_VERSION );
             ugc = client.GetISteamUGC( huser, hpipe, SteamNative.Defines.STEAMUGC_INTERFACE_VERSION );
             apps = client.GetISteamApps( huser, hpipe, SteamNative.Defines.STEAMAPPS_INTERFACE_VERSION );
@@ -161,6 +163,10 @@ namespace Facepunch.Steamworks.Interop
                 http.Dispose();
                 http = null;
             }
+			if(htmlSurface != null) {
+				htmlSurface.Dispose();
+				htmlSurface = null;
+			}
 
             if ( inventory != null )
             {
