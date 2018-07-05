@@ -63,7 +63,7 @@ namespace Facepunch.Steamworks
         public User User { get; private set; }
         public RemoteStorage RemoteStorage { get; private set; }
 
-        public Client( uint appId )
+        public Client( uint appId ) : base( appId )
         {
             if ( Instance != null )
             {
@@ -83,6 +83,12 @@ namespace Facepunch.Steamworks
                 Instance = null;
                 return;
             }
+
+            //
+            // Register Callbacks
+            //
+
+            SteamNative.Callbacks.RegisterCallbacks( this );
 
             //
             // Setup interfaces that client and server both have
@@ -115,18 +121,23 @@ namespace Facepunch.Steamworks
             BetaName = native.apps.GetCurrentBetaName();
             OwnerSteamId = native.apps.GetAppOwner();
             var appInstallDir = native.apps.GetAppInstallDir(AppId);
+
             if (!String.IsNullOrEmpty(appInstallDir) && Directory.Exists(appInstallDir))
                 InstallFolder = new DirectoryInfo(appInstallDir);
+
             BuildId = native.apps.GetAppBuildId();
             CurrentLanguage = native.apps.GetCurrentGameLanguage();
             AvailableLanguages = native.apps.GetAvailableGameLanguages().Split( new[] {';'}, StringSplitOptions.RemoveEmptyEntries ); // TODO: Assumed colon separated
-
-            
 
             //
             // Run update, first call does some initialization
             //
             Update();
+        }
+
+        ~Client()
+        {
+            Dispose();
         }
 
         /// <summary>
@@ -139,6 +150,7 @@ namespace Facepunch.Steamworks
 
             RunCallbacks();
             Voice.Update();
+            Friends.Cycle();
 
             base.Update();            
         }
@@ -156,9 +168,10 @@ namespace Facepunch.Steamworks
         /// </summary>
         public override void Dispose()
         {
+            if ( disposed ) return;
+
             if ( Voice != null )
             {
-                Voice.Dispose();
                 Voice = null;
             }
 

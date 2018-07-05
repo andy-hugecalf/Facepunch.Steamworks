@@ -100,8 +100,16 @@ namespace Facepunch.Steamworks
             return true;
         }
 
+        /// <summary>
+        /// Called when the leaderboard information is successfully recieved from Steam
+        /// </summary>
+        public Action OnBoardInformation;
+
         internal void OnBoardCreated( LeaderboardFindResult_t result, bool error )
         {
+            Console.WriteLine( $"result.LeaderboardFound: {result.LeaderboardFound}" );
+            Console.WriteLine( $"result.SteamLeaderboard: {result.SteamLeaderboard}" );
+
             if ( error || ( result.LeaderboardFound == 0 ) )
             {
                 IsError = true;
@@ -114,6 +122,8 @@ namespace Facepunch.Steamworks
                 {
                     Name = client.native.userstats.GetLeaderboardName( BoardId );
                     TotalEntries = client.native.userstats.GetLeaderboardEntryCount( BoardId );
+
+                    OnBoardInformation?.Invoke();
                 }
             }
 
@@ -125,7 +135,8 @@ namespace Facepunch.Steamworks
         /// Subscores are totally optional, and can be used for other game defined data such as laps etc.. although
         /// they have no bearing on sorting at all
         /// If onlyIfBeatsOldScore is true, the score will only be updated if it beats the existing score, else it will always
-        /// be updated.
+        /// be updated. Beating the existing score is subjective - and depends on how your leaderboard was set up as to whether
+        /// that means higher or lower.
         /// </summary>
         public bool AddScore( bool onlyIfBeatsOldScore, int score, params int[] subscores )
         {
@@ -141,10 +152,9 @@ namespace Facepunch.Steamworks
         }
 
         /// <summary>
-        /// Callback invoked by <see cref="AddScore(bool, int, int[], AddScoreCallback)"/> when score submission
+        /// Callback invoked by <see cref="AddScore(bool, int, int[], AddScoreCallback, FailureCallback)"/> when score submission
         /// is complete.
         /// </summary>
-        /// <param name="success">If true, the score was submitted</param>
         /// <param name="result">If successful, information about the new entry</param>
         public delegate void AddScoreCallback( AddScoreResult result );
 
@@ -227,7 +237,7 @@ namespace Facepunch.Steamworks
                     }
                 } );
 
-                return handle.CallResultHandle != 0;
+                return handle.IsValid;
             }
 
             file.Share( () =>
@@ -278,13 +288,13 @@ namespace Facepunch.Steamworks
         [ThreadStatic] private static List<Entry> _sEntryBuffer;
 
         /// <summary>
-        /// Callback invoked by <see cref="FetchScores(RequestType, int, int, FetchScoresCallback)"/> when
+        /// Callback invoked by <see cref="FetchScores(RequestType, int, int, FetchScoresCallback, FailureCallback)"/> when
         /// a query is complete.
         /// </summary>
         public delegate void FetchScoresCallback( Entry[] results );
 
         /// <summary>
-        ///     Fetch a subset of scores. The scores are passed to <paramref name="callback"/>.
+        ///     Fetch a subset of scores. The scores are passed to <paramref name="onSuccess"/>.
         /// </summary>
         /// <returns>Returns true if we have started the query</returns>
         public bool FetchScores( RequestType RequestType, int start, int end, FetchScoresCallback onSuccess, FailureCallback onFailure = null )

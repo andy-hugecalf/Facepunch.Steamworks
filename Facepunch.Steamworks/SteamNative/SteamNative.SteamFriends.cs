@@ -98,6 +98,7 @@ namespace SteamNative
 			callback = platform.ISteamFriends_EnumerateFollowingList( unStartIndex );
 			
 			if ( CallbackFunction == null ) return null;
+			if ( callback == 0 ) return null;
 			
 			return FriendsEnumerateFollowingList_t.CallResult( steamworks, callback, CallbackFunction );
 		}
@@ -193,6 +194,7 @@ namespace SteamNative
 			callback = platform.ISteamFriends_GetFollowerCount( steamID.Value );
 			
 			if ( CallbackFunction == null ) return null;
+			if ( callback == 0 ) return null;
 			
 			return FriendsGetFollowerCount_t.CallResult( steamworks, callback, CallbackFunction );
 		}
@@ -410,6 +412,18 @@ namespace SteamNative
 			return platform.ISteamFriends_IsClanChatWindowOpenInSteam( steamIDClanChat.Value );
 		}
 		
+		// bool
+		public bool IsClanOfficialGameGroup( CSteamID steamIDClan /*class CSteamID*/ )
+		{
+			return platform.ISteamFriends_IsClanOfficialGameGroup( steamIDClan.Value );
+		}
+		
+		// bool
+		public bool IsClanPublic( CSteamID steamIDClan /*class CSteamID*/ )
+		{
+			return platform.ISteamFriends_IsClanPublic( steamIDClan.Value );
+		}
+		
 		// SteamAPICall_t
 		public CallbackHandle IsFollowing( CSteamID steamID /*class CSteamID*/, Action<FriendsIsFollowing_t, bool> CallbackFunction = null /*Action<FriendsIsFollowing_t, bool>*/ )
 		{
@@ -417,6 +431,7 @@ namespace SteamNative
 			callback = platform.ISteamFriends_IsFollowing( steamID.Value );
 			
 			if ( CallbackFunction == null ) return null;
+			if ( callback == 0 ) return null;
 			
 			return FriendsIsFollowing_t.CallResult( steamworks, callback, CallbackFunction );
 		}
@@ -434,6 +449,7 @@ namespace SteamNative
 			callback = platform.ISteamFriends_JoinClanChatRoom( steamIDClan.Value );
 			
 			if ( CallbackFunction == null ) return null;
+			if ( callback == 0 ) return null;
 			
 			return JoinClanChatRoomCompletionResult_t.CallResult( steamworks, callback, CallbackFunction );
 		}
@@ -463,6 +479,7 @@ namespace SteamNative
 			callback = platform.ISteamFriends_RequestClanOfficerList( steamIDClan.Value );
 			
 			if ( CallbackFunction == null ) return null;
+			if ( callback == 0 ) return null;
 			
 			return ClanOfficerListResponse_t.CallResult( steamworks, callback, CallbackFunction );
 		}
@@ -504,6 +521,7 @@ namespace SteamNative
 			callback = platform.ISteamFriends_SetPersonaName( pchPersonaName );
 			
 			if ( CallbackFunction == null ) return null;
+			if ( callback == 0 ) return null;
 			
 			return SetPersonaNameResponse_t.CallResult( steamworks, callback, CallbackFunction );
 		}

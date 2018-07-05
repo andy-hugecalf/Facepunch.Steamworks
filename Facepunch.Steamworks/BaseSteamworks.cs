@@ -25,14 +25,43 @@ namespace Facepunch.Steamworks
         internal Interop.NativeInterface native;
 
         private List<SteamNative.CallbackHandle> CallbackHandles = new List<SteamNative.CallbackHandle>();
+        private List<SteamNative.CallResult> CallResults = new List<SteamNative.CallResult>();
+        protected bool disposed = false;
+
+
+        protected BaseSteamworks( uint appId )
+        {
+            AppId = appId;
+
+            //
+            // No need for the "steam_appid.txt" file any more
+            //
+            System.Environment.SetEnvironmentVariable("SteamAppId", AppId.ToString());
+            System.Environment.SetEnvironmentVariable("SteamGameId", AppId.ToString());
+        }
+
+        ~BaseSteamworks()
+        {
+            Dispose();
+        }
 
         public virtual void Dispose()
         {
+            if ( disposed ) return;
+
+            Callbacks.Clear();
+
             foreach ( var h in CallbackHandles )
             {
                 h.Dispose();
             }
             CallbackHandles.Clear();
+
+            foreach ( var h in CallResults )
+            {
+                h.Dispose();
+            }
+            CallResults.Clear();
 
             if ( Workshop != null )
             {
@@ -57,6 +86,10 @@ namespace Facepunch.Steamworks
                 native.Dispose();
                 native = null;
             }
+
+            System.Environment.SetEnvironmentVariable("SteamAppId", null );
+            System.Environment.SetEnvironmentVariable("SteamGameId", null );
+            disposed = true;
         }
 
         protected void SetupCommonInterfaces()
@@ -83,10 +116,18 @@ namespace Facepunch.Steamworks
             CallbackHandles.Add( handle );
         }
 
+        internal void RegisterCallResult( SteamNative.CallResult handle )
+        {
+            CallResults.Add( handle );
+        }
+
+        internal void UnregisterCallResult( SteamNative.CallResult handle )
+        {
+            CallResults.Remove( handle );
+        }
+
         public virtual void Update()
         {
-            Inventory.Update();
-
             Networking.Update();
 
             RunUpdateCallbacks();
@@ -99,6 +140,18 @@ namespace Facepunch.Steamworks
         {
             if ( OnUpdate != null )
                 OnUpdate();
+
+            for( int i=0; i < CallResults.Count; i++ )
+            {
+                CallResults[i].Try();
+            }
+
+            //
+            // The SourceServerQuery's happen in another thread, so we 
+            // query them to see if they're finished, and if so post a callback
+            // in our main thread. This will all suck less once we have async.
+            //
+            Facepunch.Steamworks.SourceServerQuery.Cycle();
         }
 
         /// <summary>
@@ -108,11 +161,59 @@ namespace Facepunch.Steamworks
         /// </summary>
         public void UpdateWhile( Func<bool> func )
         {
+            const int sleepMs = 1;
+
             while ( func() )
             {
                 Update();
-                System.Threading.Thread.Sleep( 1 );
+#if NET_CORE
+                System.Threading.Tasks.Task.Delay( sleepMs ).Wait();
+#else
+                System.Threading.Thread.Sleep( sleepMs );
+#endif
             }
         }
+
+        /// <summary>
+        /// Debug function, called for every callback. Only really used to confirm that callbacks are working properly.
+        /// </summary>
+        public Action<object> OnAnyCallback;
+
+        Dictionary<Type, List<Action<object>>> Callbacks = new Dictionary<Type, List<Action<object>>>();
+
+        internal List<Action<object>> CallbackList( Type T )
+        {
+            List<Action<object>> list = null;
+
+            if ( !Callbacks.TryGetValue( T, out list ) )
+            {
+                list = new List<Action<object>>();
+                Callbacks[T] = list;
+            }
+
+            return list;
+        }
+
+        internal void OnCallback<T>( T data )
+        {
+            var list = CallbackList( typeof( T ) );
+
+            foreach ( var i in list )
+            {
+                i( data );
+            }
+
+            if ( OnAnyCallback != null )
+            {
+                OnAnyCallback.Invoke( data );
+            }
+        }
+
+        internal void RegisterCallback<T>( Action<T> func )
+        {
+            var list = CallbackList( typeof( T ) );
+            list.Add( ( o ) => func( (T) o ) );
+        }
+
     }
 }

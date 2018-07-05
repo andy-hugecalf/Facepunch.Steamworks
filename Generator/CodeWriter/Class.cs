@@ -9,6 +9,7 @@ namespace Generator
     public partial class CodeWriter
     {
         string LastMethodName;
+        int MethodNameCount;
         List<string> BeforeLines;
         List<string> AfterLines;
         string ReturnType;
@@ -143,8 +144,15 @@ namespace Generator
 
             var methodName = m.Name;
 
-            if ( LastMethodName == methodName )
-                methodName += "0";
+            if (LastMethodName == methodName)
+            {
+                methodName += MethodNameCount.ToString();
+                MethodNameCount++;
+            }
+            else
+            {
+                MethodNameCount = 0;
+            }
 
             var argString = string.Join( ", ", argList.Select( x => x.ManagedParameter() ) );
             if ( argString != "" ) argString = " " + argString + " ";
@@ -175,6 +183,7 @@ namespace Generator
 
             AfterLines.Add( "" );
             AfterLines.Add( "if ( CallbackFunction == null ) return null;" );
+            AfterLines.Add("if ( callback == 0 ) return null;");
             AfterLines.Add( "" );
 
             AfterLines.Add( $"return {MethodDef.CallResult}.CallResult( steamworks, callback, CallbackFunction );" );

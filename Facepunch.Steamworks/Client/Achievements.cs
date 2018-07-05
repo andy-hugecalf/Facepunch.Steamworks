@@ -22,8 +22,8 @@ namespace Facepunch.Steamworks
             client = c;
 
             All = new Achievement[0];
-            SteamNative.UserStatsReceived_t.RegisterCallback( c, UserStatsReceived );
-            SteamNative.UserStatsStored_t.RegisterCallback( c, UserStatsStored );
+            c.RegisterCallback<UserStatsReceived_t>( UserStatsReceived );
+            c.RegisterCallback<UserStatsStored_t>( UserStatsStored );
 
             Refresh();
         }
@@ -100,9 +100,8 @@ namespace Facepunch.Steamworks
             return client.native.userstats.ClearAchievement( identifier );
         }
 
-        private void UserStatsReceived( UserStatsReceived_t stats, bool isError )
+        private void UserStatsReceived( UserStatsReceived_t stats )
         {
-            if ( isError ) return;
             if ( stats.GameID != client.AppId ) return;
 
             Refresh();
@@ -110,9 +109,8 @@ namespace Facepunch.Steamworks
             OnUpdated?.Invoke();
         }
 
-        private void UserStatsStored( UserStatsStored_t stats, bool isError )
+        private void UserStatsStored( UserStatsStored_t stats )
         {
-            if ( isError ) return;
             if ( stats.GameID != client.AppId ) return;
 
             Refresh();
@@ -143,9 +141,9 @@ namespace Facepunch.Steamworks
         private int refreshCount = 0;
 
         /// <summary>
-        /// If this achievement is linked to a stat this will return the progress.
+        /// Returns the percentage of users who have unlocked the specified achievement, or -1 if no data available.
         /// </summary>
-        public float Percentage
+        public float GlobalUnlockedPercentage
         {
             get
             {

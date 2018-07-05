@@ -30,11 +30,11 @@ namespace Facepunch.Steamworks.Interop
 
         private bool isServer;
 
-        private HSteamUser hUser;
-        private HSteamPipe hPipe;
-
         internal bool InitClient( BaseSteamworks steamworks )
         {
+            if ( Steamworks.Server.Instance != null )
+                throw new System.Exception("Steam client should be initialized before steam server - or there's big trouble.");
+
             isServer = false;
 
             api = new SteamNative.SteamApi();
@@ -45,8 +45,8 @@ namespace Facepunch.Steamworks.Interop
                 return false;
             }
 
-            hUser = api.SteamAPI_GetHSteamUser();
-            hPipe = api.SteamAPI_GetHSteamPipe();
+            var hUser = api.SteamAPI_GetHSteamUser();
+            var hPipe = api.SteamAPI_GetHSteamPipe();
             if ( hPipe == 0 )
             {
                 Console.Error.WriteLine( "InitClient: hPipe == 0" );
@@ -84,8 +84,8 @@ namespace Facepunch.Steamworks.Interop
                 return false;
             }
 
-            hUser = api.SteamGameServer_GetHSteamUser();
-            hPipe = api.SteamGameServer_GetHSteamPipe();
+            var hUser = api.SteamGameServer_GetHSteamUser();
+            var hPipe = api.SteamGameServer_GetHSteamPipe();
             if ( hPipe == 0 )
             {
                 Console.Error.WriteLine( "InitServer: hPipe == 0" );
@@ -222,6 +222,12 @@ namespace Facepunch.Steamworks.Interop
                 remoteStorage = null;
             }
 
+            if ( matchmaking != null )
+            {
+                matchmaking.Dispose();
+                matchmaking = null;
+            }
+
             if ( applist != null )
             {
                 applist.Dispose();
@@ -247,9 +253,6 @@ namespace Facepunch.Steamworks.Interop
                 // at this point will result in a crash - because any
                 // pointers we stored are not invalid.
                 //
-
-                hPipe = 0;
-                hUser = 0;
 
                 api.Dispose();
                 api = null;

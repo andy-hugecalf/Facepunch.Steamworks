@@ -68,6 +68,7 @@ namespace SteamNative
 			callback = platform.ISteamHTMLSurface_CreateBrowser( pchUserAgent, pchUserCSS );
 			
 			if ( CallbackFunction == null ) return null;
+			if ( callback == 0 ) return null;
 			
 			return HTML_BrowserReady_t.CallResult( steamworks, callback, CallbackFunction );
 		}
@@ -202,6 +203,12 @@ namespace SteamNative
 		public void SetCookie( string pchHostname /*const char **/, string pchKey /*const char **/, string pchValue /*const char **/, string pchPath /*const char **/, RTime32 nExpires /*RTime32*/, bool bSecure /*bool*/, bool bHTTPOnly /*bool*/ )
 		{
 			platform.ISteamHTMLSurface_SetCookie( pchHostname, pchKey, pchValue, pchPath, nExpires.Value, bSecure, bHTTPOnly );
+		}
+		
+		// void
+		public void SetDPIScalingFactor( HHTMLBrowser unBrowserHandle /*HHTMLBrowser*/, float flDPIScaling /*float*/ )
+		{
+			platform.ISteamHTMLSurface_SetDPIScalingFactor( unBrowserHandle.Value, flDPIScaling );
 		}
 		
 		// void

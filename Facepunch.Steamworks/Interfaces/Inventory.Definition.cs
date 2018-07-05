@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
+using SteamNative;
 
 namespace Facepunch.Steamworks
 {
@@ -16,7 +17,7 @@ namespace Facepunch.Steamworks
         /// </summary>
         public class Definition
         {
-            internal SteamNative.SteamInventory inventory;
+            internal Inventory inventory;
 
             public int Id { get; private set; }
             public string Name { get; set; }
@@ -57,14 +58,26 @@ namespace Facepunch.Steamworks
             public DateTime Modified { get; set; }
 
             /// <summary>
-            /// The raw contets of price_category from the schema
+            /// The raw contents of price_category from the schema
             /// </summary>
-            public string PriceRaw { get; set; }
+            public string PriceCategory { get; set; }
 
             /// <summary>
             /// The dollar price from PriceRaw
             /// </summary>
-            public double PriceDollars { get; set; }
+            public double PriceDollars { get; internal set; }
+
+
+            /// <summary>
+            /// The price in the local player's currency. The local player's currency
+            /// is available in Invetory.Currency
+            /// </summary>
+            public double LocalPrice { get; internal set; }
+
+            /// <summary>
+            /// Local Price but probably how you want to display it (ie, $3.99, £1.99 etc )
+            /// </summary>
+            public string LocalPriceFormatted { get; internal set; }
             
             /// <summary>
             /// Returns true if this item can be sold on the marketplace
@@ -78,12 +91,13 @@ namespace Facepunch.Steamworks
 
             private Dictionary<string, string> customProperties;
 
-            internal Definition( SteamNative.SteamInventory i, int id )
+            internal Definition( Inventory i, int id )
             {
                 inventory = i;
                 Id = id;
 
                 SetupCommonProperties();
+                UpdatePrice();
             }
 
             /// <summary>
@@ -132,7 +146,7 @@ namespace Facepunch.Steamworks
                 if ( customProperties != null && customProperties.ContainsKey( name ) )
                     return customProperties[name];
 
-                if ( !inventory.GetItemDefinitionProperty( Id, name, out val ) )
+                if ( !inventory.inventory.GetItemDefinitionProperty( Id, name, out val ) )
                     return string.Empty;
 
                 return val;
@@ -161,12 +175,12 @@ namespace Facepunch.Steamworks
                 IconUrl = GetStringProperty( "icon_url" );
                 IconLargeUrl = GetStringProperty( "icon_url_large" );
                 Type = GetStringProperty( "type" );
-                PriceRaw = GetStringProperty( "price_category" );
+                PriceCategory = GetStringProperty( "price_category" );
                 Marketable = GetBoolProperty( "marketable" );
 
-                if ( !string.IsNullOrEmpty( PriceRaw  ) )
+                if ( !string.IsNullOrEmpty( PriceCategory  ) )
                 {
-                    PriceDollars = PriceCategoryToFloat( PriceRaw );
+                    PriceDollars = PriceCategoryToFloat( PriceCategory );
                 }
             }
 
@@ -178,9 +192,16 @@ namespace Facepunch.Steamworks
             /// </summary>
             public void TriggerItemDrop()
             {
-                SteamNative.SteamInventoryResult_t result = 0;
-                inventory.TriggerItemDrop( ref result, Id );
-                inventory.DestroyResult( result );
+                inventory.TriggerItemDrop( Id );
+            }
+
+            /// <summary>
+            /// Trigger a promo item drop. You can call this at startup, it won't
+            /// give users multiple promo drops.
+            /// </summary>
+            public void TriggerPromoDrop()
+            {
+                inventory.TriggerPromoDrop( Id );            
             }
 
             internal void Link( Definition[] definitions )
@@ -207,6 +228,52 @@ namespace Facepunch.Steamworks
 
                 IngredientFor = list.ToArray();
             }
+
+            internal void UpdatePrice()
+            {
+                if ( inventory.inventory.GetItemPrice( Id, out ulong price) )
+                {
+                    LocalPrice = price / 100.0;
+                    LocalPriceFormatted = Utility.FormatPrice( inventory.Currency, price );
+                }
+                else
+                {
+                    LocalPrice = 0;
+                    LocalPriceFormatted = null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Trigger a promo item drop. You can call this at startup, it won't
+        /// give users multiple promo drops.
+        /// </summary>
+        public void TriggerPromoDrop( int definitionId )
+        {
+            SteamNative.SteamInventoryResult_t result = 0;
+            inventory.AddPromoItem( ref result, definitionId );
+            inventory.DestroyResult( result );
+        }
+
+        /// <summary>
+        /// Trigger an item drop for this user. This is for timed drops. For promo
+        /// drops use TriggerPromoDrop.
+        /// </summary>
+        public void TriggerItemDrop( int definitionId )
+        {
+            SteamNative.SteamInventoryResult_t result = 0;
+            inventory.TriggerItemDrop( ref result, definitionId );
+            inventory.DestroyResult( result );
+        }
+
+        /// <summary>
+        /// Grant all promotional items the user is eligible for.
+        /// </summary>
+        public void GrantAllPromoItems()
+        {
+            SteamNative.SteamInventoryResult_t result = 0;
+            inventory.GrantPromoItems( ref result );
+            inventory.DestroyResult( result );
         }
 
         /// <summary>
